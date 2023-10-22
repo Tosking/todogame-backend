@@ -35,7 +35,7 @@ app.post("/auth/signup", (req, res) => {
     return
   }
   const pass = createHash('sha256').update(req.body.password).digest('hex')
-  const result = pg.query(`SELECT id FROM users WHERE password = '${pass}' AND email = '${req.body.email}'`, (result) => {
+  const result = pg.query(`SELECT id FROM users WHERE login = '${req.body.login}' OR email = '${req.body.email}'`, (result) => {
     if(result.rows[0].id == undefined){
       pg.query(`INSERT INTO users (login, email, password) VALUES ('${req.body.login}', '${req.body.email}', '${pass}') RETURNING id, login;`, (err, result) => {
         const userToken = token.generateAccessToken(result.rows[0].login)
@@ -53,13 +53,13 @@ app.post("/auth/signup", (req, res) => {
 
 app.post("/auth/signin", (req, res) => {
   const pass = createHash('sha256').update(req.body.password).digest('hex')
-  const result = pg.query(`SELECT id, login FROM users WHERE password = '${pass}' AND email = '${req.body.email}'`, (err, result) => {
+  const result = pg.query(`SELECT id, login FROM users WHERE password = '${pass}' AND login = '${req.body.login}'`, (err, result) => {
       if(result.rows.length == 0){
-          res.status(400).send("Email или пароль введены неверно")
+          res.status(400).send("Логин или пароль введены неверно")
           return
       }
       else if(inputHandler.signinHandler(req)){
-        res.status(400).send("Email или пароль введены неверно")
+        res.status(400).send("Логин или пароль введены неверно")
         return
       }
       else {
@@ -72,6 +72,8 @@ app.post("/auth/signin", (req, res) => {
       }
   })
 })
+
+app.post("")
 
 app.listen(port, () => {
     console.log("server started at port 3000")

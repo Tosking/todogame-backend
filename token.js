@@ -12,12 +12,12 @@ function authenticateToken(req, res, next) {
   
     if (token == null) return res.sendStatus(401)
   
-    jwt.verify(token, process.env.TOKEN, (err, user) => {
+    jwt.verify(token, process.env.TOKEN, (err, login) => {
       console.log(err)
   
       if (err) return res.sendStatus(403)
   
-      req.user = user
+      req.body.tokenLogin = login
   
       next()
     })
