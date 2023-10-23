@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken')
+const { pg } = require("./dbConnect.js")
 require('dotenv').config()
 
 function generateAccessToken(id) {
@@ -6,11 +7,11 @@ function generateAccessToken(id) {
 }
 
 function generateRefreshToken(id) {
-  return jwt.sign({id: id}, process.env.REFRESH_TOKEN, { expiresIn: '3m' });
+  return jwt.sign({id: id}, process.env.REFRESH_TOKEN, { expiresIn: '1y' });
 }
 
 
-function authenticateAccessToken(req, res, next) {
+async function authenticateAccessToken(req, res, next) {
   const authHeader = req.headers['authorization']
   const token = authHeader && authHeader.split(' ')[1]
 
@@ -27,35 +28,31 @@ function authenticateAccessToken(req, res, next) {
   })
 }
 
-function authenticateRefreshToken(req, res, next) {
-  const authHeader = req.headers['authorization']
-  const token = authHeader && authHeader.split(' ')[1]
-
-  if (token == null) return res.sendStatus(401)
-
-  jwt.verify(token, process.env.REFRESH_TOKEN, (err, tokenID) => {
-    console.log(err)
-
-    if (err) return res.sendStatus(403)
-
-    req.body.refreshToken = tokenID
-
-    next()
-  })
-}
-
-async function verifyRefreshToken(req, res, pg){
-  return pg.query(`SELECT refresh_token FROM users WHERE id=${req.cookies.id}`, (err, result) => {
-    if(!result.rows){
-      return false
+async function verifyRefreshToken(req, res, next){
+  try {
+    const result = await pg.query(`SELECT refresh_token FROM users WHERE id=${req.cookies.id}`)
+    if(req.cookies.refreshToken != result.rows.refresh_token){
+      res.status(400).send("Invalid token")
+      return
     }
-  })
+    jwt.verify(result.rows.refresh_token, process.env.REFRESH_TOKEN, (err, tokenID) => {
+      console.log(err)
+  
+      if (err) return res.sendStatus(403)
+  
+      req.body.refreshToken = tokenID
+  
+      next()
+    })
+  } catch (err) {
+    res.status(401).json({ messages: err.stack })
+  }
 }
 
 module.exports = {
     generateAccessToken,
     authenticateAccessToken,
-    authenticateRefreshToken,
-    generateRefreshToken
+    generateRefreshToken,
+    verifyRefreshToken
 }
   

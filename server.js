@@ -6,21 +6,16 @@ const cookieParser = require('cookie-parser');
 const crypto = require('crypto');
 const cors = require('cors')
 const token = require("./token.js")
-const inputHandler = require("./handleInput.js")
+const inputHandler = require("./inputHandler.js")
+const { pg } = require("./dbConnect.js")
 const app = express()
 const port = 3000
 require('dotenv').config()
 
-const { Client } = require('pg');
-const pg = new Client({
-    host: process.env.PG_HOST,
-    port: process.env.PG_PORT,
-    user: process.env.PG_USER,
-    password: process.env.PG_PASSWORD,
-    database: process.env.PG_DATABASE,
-    ssl: false,
-})
-pg.connect()
+const minute = 60000
+const hour = minute * 60
+const day = hour * 24
+
 
 app.use(cors()); 
 app.use("/style", express.static(path.join(__dirname, 'style')))
@@ -30,7 +25,7 @@ app.use(bodyParser.urlencoded({
   extended: true
 })); 
 
-app.post("/auth/signup", (req, res) => {
+app.post("/auth/signup", async (req, res) => {
   const credentials = inputHandler.signupHandler(req)
   console.log(credentials)
   if(!credentials){
@@ -42,8 +37,10 @@ app.post("/auth/signup", (req, res) => {
     if(result.rows){
       pg.query(`INSERT INTO users (login, email, password) VALUES ('${credentials.login}', '${credentials.email}', '${pass}') RETURNING id, login;`, (err, result) => {
         const refreshToken = token.generateRefreshToken(result.rows[0].id)
+        const accessToken = token.generateAccessToken(result.rows[0].id)
         pg.query(`UPDATE users SET refresh_token = '${refreshToken}'`)
-        res.cookie('token',tokenID, { maxAge: 900000, httpOnly: true });
+        res.cookie('refreshToken',refreshToken, { maxAge: day*365, expires: new Date(Date.now() + day*365), httpOnly: true });
+        res.cookie('accessToken',accessToken, { maxAge: minute*10, expires: new Date(Date.now() + minute*10), httpOnly: true });
         res.cookie('id', result.rows[0].id)
         res.cookie('login', result.rows[0].login)
         res.sendStatus(200)
@@ -55,17 +52,19 @@ app.post("/auth/signup", (req, res) => {
   })
 })
 
-app.post("/auth/signin", (req, res) => {
+app.post("/auth/signin", async (req, res) => {
   const credentials = inputHandler.signupHandler(req)
   const pass = crypto.createHash('sha256').update(credentials.password).digest('hex')
-  const result = pg.query(`SELECT id, login FROM users WHERE password = '${pass}' AND login = '${credentials.login}'`, (err, result) => {
+  const result = pg.query(`SELECT id, login FROM users WHERE password = '${pass}' AND login = '${credentials.login}'`, async (err, result) => {
       if(!credentials || !result.rows){
         res.status(400).send("Логин или пароль введены неверно")
         return
       }
       else {
           const refreshToken = token.generateRefreshToken(result.rows[0].id)
-          res.cookie('cookie',tokenID, { maxAge: 90000, httpOnly: true });
+          const accessToken = token.generateAccessToken(result.rows[0].id)
+          res.cookie('refreshToken',refreshToken, { maxAge: day*365, expires: new Date(Date.now() + day*365), httpOnly: true });
+          res.cookie('accessToken',accessToken, { maxAge: minute*10, expires: new Date(Date.now() + minute*10), httpOnly: true });
           res.cookie('id', result.rows[0].id)
           res.cookie('login', result.rows[0].login)
           res.sendStatus(200)
@@ -74,8 +73,9 @@ app.post("/auth/signin", (req, res) => {
   })
 })
 
-app.post("/auth/token", (req, res) => {
-
+app.post("/auth/token", verifyRefreshToken, (req, res) => {
+  const accessToken = token.generateAccessToken(result.rows[0].id)
+  res.send(200).cookie('accessToken',accessToken, { maxAge: minute*10, expires: new Date(Date.now() + minute*10), httpOnly: true })
 })
 
 app.post("/task/create", token.authenticateToken, (req, res) => {
