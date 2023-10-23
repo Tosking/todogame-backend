@@ -4,6 +4,7 @@ const path = require('path');
 const bodyParser = require('body-parser')
 const cookieParser = require('cookie-parser');
 const crypto = require('crypto');
+const cors = require('cors')
 const token = require("./token.js")
 const inputHandler = require("./handleInput.js")
 const app = express()
@@ -21,6 +22,7 @@ const pg = new Client({
 })
 pg.connect()
 
+app.use(cors()); 
 app.use("/style", express.static(path.join(__dirname, 'style')))
 app.use(cookieParser());
 app.use( bodyParser.json() );    
@@ -39,8 +41,9 @@ app.post("/auth/signup", (req, res) => {
   const result = pg.query(`SELECT id FROM users WHERE login = '${credentials.login}' OR email = '${credentials.email}'`, (err, result) => {
     if(result.rows){
       pg.query(`INSERT INTO users (login, email, password) VALUES ('${credentials.login}', '${credentials.email}', '${pass}') RETURNING id, login;`, (err, result) => {
-        const userToken = token.generateAccessToken(result.rows[0].login)
-        res.cookie('token',userToken, { maxAge: 900000, httpOnly: true });
+        const refreshToken = token.generateRefreshToken(result.rows[0].id)
+        pg.query(`UPDATE users SET refresh_token = '${refreshToken}'`)
+        res.cookie('token',tokenID, { maxAge: 900000, httpOnly: true });
         res.cookie('id', result.rows[0].id)
         res.cookie('login', result.rows[0].login)
         res.sendStatus(200)
@@ -61,8 +64,8 @@ app.post("/auth/signin", (req, res) => {
         return
       }
       else {
-          const userToken = token.generateAccessToken(result.rows[0].login)
-          res.cookie('cookie',userToken, { maxAge: 90000, httpOnly: true });
+          const refreshToken = token.generateRefreshToken(result.rows[0].id)
+          res.cookie('cookie',tokenID, { maxAge: 90000, httpOnly: true });
           res.cookie('id', result.rows[0].id)
           res.cookie('login', result.rows[0].login)
           res.sendStatus(200)
@@ -71,7 +74,13 @@ app.post("/auth/signin", (req, res) => {
   })
 })
 
-app.post("")
+app.post("/auth/token", (req, res) => {
+
+})
+
+app.post("/task/create", token.authenticateToken, (req, res) => {
+
+})
 
 app.listen(port, () => {
     console.log("server started at port 3000")
