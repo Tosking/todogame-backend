@@ -14,7 +14,7 @@ function signupHandler(req) {
     return {login: login, password: password, email: email}
 }
 
-function signinHandler(){
+function signinHandler(req){
     if(!req.body.login  || !req.body.password){
         return false
     }
@@ -23,7 +23,7 @@ function signinHandler(){
     if(!login || password.length < 8){
         return false
     }
-    return true
+    return {login:login,password:password}
 }
 
 module.exports = {

@@ -1,3 +1,4 @@
+require('dotenv').config()
 const { Client } = require('pg');
 const pg = new Client({
     host: process.env.PG_HOST,

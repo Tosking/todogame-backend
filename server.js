@@ -9,15 +9,16 @@ const token = require("./token.js")
 const inputHandler = require("./inputHandler.js")
 const { pg } = require("./dbConnect.js")
 const app = express()
-const port = 3000
+const port = 3001
 require('dotenv').config()
+
 
 const minute = 60000
 const hour = minute * 60
 const day = hour * 24
 
 
-app.use(cors()); 
+app.use(cors({credentials:true,origin:"http://localhost:3000"})); 
 app.use("/style", express.static(path.join(__dirname, 'style')))
 app.use(cookieParser());
 app.use( bodyParser.json() );    
@@ -43,7 +44,11 @@ app.post("/auth/signup", async (req, res) => {
         res.cookie('accessToken',accessToken, { maxAge: minute*10, expires: new Date(Date.now() + minute*10), httpOnly: true });
         res.cookie('id', result.rows[0].id)
         res.cookie('login', result.rows[0].login)
-        res.sendStatus(200)
+        const user = {
+          login:result.rows[0].login,
+          accessToken:accessToken
+        }
+        res.status(200)
       })
     }
     else {
@@ -53,7 +58,7 @@ app.post("/auth/signup", async (req, res) => {
 })
 
 app.post("/auth/signin", async (req, res) => {
-  const credentials = inputHandler.signupHandler(req)
+  const credentials = inputHandler.signinHandler(req)
   const pass = crypto.createHash('sha256').update(credentials.password).digest('hex')
   const result = pg.query(`SELECT id, login FROM users WHERE password = '${pass}' AND login = '${credentials.login}'`, async (err, result) => {
       if(!credentials || !result.rows){
@@ -73,15 +78,15 @@ app.post("/auth/signin", async (req, res) => {
   })
 })
 
-app.post("/auth/token", verifyRefreshToken, (req, res) => {
+app.post("/auth/token", token.verifyRefreshToken, (req, res) => {
   const accessToken = token.generateAccessToken(result.rows[0].id)
   res.send(200).cookie('accessToken',accessToken, { maxAge: minute*10, expires: new Date(Date.now() + minute*10), httpOnly: true })
 })
 
-app.post("/task/create", token.authenticateToken, (req, res) => {
+// app.post("/task/create", token.authenticateToken, (req, res) => {
 
-})
+// })
 
 app.listen(port, () => {
-    console.log("server started at port 3000")
+    console.log("server started at port 3000" + crypto.randomBytes(64).toString('hex'))
 })
