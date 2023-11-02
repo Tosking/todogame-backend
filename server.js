@@ -41,7 +41,7 @@ app.post("/auth/signup", async (req, res) => {
   const result = pg.query(
     `SELECT id FROM users WHERE login = '${credentials.login}' OR email = '${credentials.email}'`,
     (err, result) => {
-      if (result.rows) {
+      if (!result.rows) {
         pg.query(
           `INSERT INTO users (login, email, password) VALUES ('${credentials.login}', '${credentials.email}', '${pass}') RETURNING id, login;`,
           (err, result) => {
@@ -60,7 +60,7 @@ app.post("/auth/signup", async (req, res) => {
               login: result.rows[0].login,
               accessToken: accessToken,
             };
-            res.status(200).send({accessToken: accessToken});
+            res.status(200).send({ accessToken: accessToken });
           }
         );
       } else {
@@ -108,7 +108,12 @@ app.post("/refresh", token.verifyRefreshToken, (req, res) => {
     httpOnly: true,
   });
 });
-
+app.post("/logout", (req, res) => {
+  res.clearCookie("refreshToken");
+  res.clearCookie("id");
+  res.clearCookie("login");
+  res.end();
+});
 // app.post("/task/create", token.authenticateToken, (req, res) => {
 
 // })
