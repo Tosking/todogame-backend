@@ -55,6 +55,7 @@ app.post("/auth/signup", async (req, res) => {
               result.rows[0].id,
               result.rows[0].login
             );
+            pg.query(`UPDATE users SET refresh_token = '${refreshToken}'`);
             res.cookie("refreshToken", refreshToken, {
               maxAge: day * 365,
               expires: new Date(Date.now() + day * 365),
@@ -63,10 +64,7 @@ app.post("/auth/signup", async (req, res) => {
             });
             res.cookie("id", result.rows[0].id);
             res.cookie("login", result.rows[0].login);
-            const user = {
-              login: result.rows[0].login,
-              accessToken: accessToken,
-            };
+
             res.status(200).send({ accessToken: accessToken });
           }
         );
@@ -90,10 +88,11 @@ app.post("/auth/signin", async (req, res) => {
         res.status(400).send("Логин или пароль введены неверно");
         return;
       } else {
-        const refreshToken = token.generateRefreshToken(
-          result.rows[0].id,
-          result.rows[0].login
-        );
+        const refreshToken = (
+          await pg.query(
+            `SELECT refresh_token FROM users WHERE id=${result.rows[0].id}`
+          )
+        ).rows[0].refresh_token;
         const accessToken = token.generateAccessToken(
           result.rows[0].id,
           result.rows[0].login
@@ -114,14 +113,16 @@ app.post("/auth/signin", async (req, res) => {
 });
 
 app.post("/refresh", token.verifyRefreshToken, (req, res) => {
-  const accessToken = token.generateAccessToken(req.rows[0].id);
-  res.send(200).send({ status: "OK", accessToken: accessToken });
+  const accessToken = token.generateAccessToken(req.body.id, req.body.login);
+  console.log("access: ", accessToken);
+  res.status(200).send({ status: "OK", accessToken: accessToken });
 });
 app.post("/logout", (req, res) => {
   res.clearCookie("refreshToken");
   res.clearCookie("id");
   res.clearCookie("login");
   res.end();
+  res.status(200).send({ status: "OK" });
 });
 // app.post("/task/create", token.authenticateToken, (req, res) => {
 
