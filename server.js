@@ -29,7 +29,7 @@ app.use(
 
 app.post("/auth/signup", async (req, res) => {
   const credentials = inputHandler.signupHandler(req);
-  console.log(credentials);
+  //console.log(credentials);
   if (!credentials) {
     res.sendStatus(400);
     return;
@@ -41,13 +41,20 @@ app.post("/auth/signup", async (req, res) => {
   const result = pg.query(
     `SELECT id FROM users WHERE login = '${credentials.login}' OR email = '${credentials.email}'`,
     (err, result) => {
-      if (!result.rows) {
+      console.log(result.rows.length == 0);
+      if (result.rows.length == 0) {
         pg.query(
           `INSERT INTO users (login, email, password) VALUES ('${credentials.login}', '${credentials.email}', '${pass}') RETURNING id, login;`,
           (err, result) => {
-            const refreshToken = token.generateRefreshToken(result.rows[0].id);
-            const accessToken = token.generateAccessToken(result.rows[0].id);
-            pg.query(`UPDATE users SET refresh_token = '${refreshToken}'`);
+            console.log(result.rows[0].login, result.rows[0].id);
+            const refreshToken = token.generateRefreshToken(
+              result.rows[0].id,
+              result.rows[0].login
+            );
+            const accessToken = token.generateAccessToken(
+              result.rows[0].id,
+              result.rows[0].login
+            );
             res.cookie("refreshToken", refreshToken, {
               maxAge: day * 365,
               expires: new Date(Date.now() + day * 365),
@@ -79,12 +86,18 @@ app.post("/auth/signin", async (req, res) => {
   const result = pg.query(
     `SELECT id, login FROM users WHERE password = '${pass}' AND login = '${credentials.login}'`,
     async (err, result) => {
-      if (!credentials || !result.rows) {
+      if (!credentials || result.rows.length == 0) {
         res.status(400).send("Логин или пароль введены неверно");
         return;
       } else {
-        const refreshToken = token.generateRefreshToken(result.rows[0].id);
-        const accessToken = token.generateAccessToken(result.rows[0].id);
+        const refreshToken = token.generateRefreshToken(
+          result.rows[0].id,
+          result.rows[0].login
+        );
+        const accessToken = token.generateAccessToken(
+          result.rows[0].id,
+          result.rows[0].login
+        );
         res.cookie("refreshToken", refreshToken, {
           maxAge: day * 365,
           expires: new Date(Date.now() + day * 365),
@@ -102,11 +115,7 @@ app.post("/auth/signin", async (req, res) => {
 
 app.post("/refresh", token.verifyRefreshToken, (req, res) => {
   const accessToken = token.generateAccessToken(req.rows[0].id);
-  res.send(200).cookie("accessToken", accessToken, {
-    maxAge: minute * 10,
-    expires: new Date(Date.now() + minute * 10),
-    httpOnly: true,
-  });
+  res.send(200).send({ status: "OK", accessToken: accessToken });
 });
 app.post("/logout", (req, res) => {
   res.clearCookie("refreshToken");

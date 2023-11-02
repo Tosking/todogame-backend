@@ -2,12 +2,12 @@ const jwt = require('jsonwebtoken')
 const { pg } = require("./dbConnect.js")
 require('dotenv').config()
 
-function generateAccessToken(id) {
-  return jwt.sign({id: id}, process.env.ACCESS_TOKEN, { expiresIn: '3600s' });
+function generateAccessToken(id, login) {
+  return jwt.sign({id: id, login: login}, process.env.ACCESS_TOKEN, { expiresIn: '3600s' });
 }
 
-function generateRefreshToken(id) {
-  return jwt.sign({id: id}, process.env.REFRESH_TOKEN, { expiresIn: '1y' });
+function generateRefreshToken(id, login) {
+  return jwt.sign({id: id, login: login}, process.env.REFRESH_TOKEN, { expiresIn: '1y' });
 }
 
 
