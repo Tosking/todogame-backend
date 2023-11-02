@@ -54,19 +54,13 @@ app.post("/auth/signup", async (req, res) => {
               httpOnly: true,
               sameSite: "strict",
             });
-            res.cookie("accessToken", accessToken, {
-              maxAge: minute * 10,
-              expires: new Date(Date.now() + minute * 10),
-              httpOnly: true,
-              sameSite: "strict",
-            });
             res.cookie("id", result.rows[0].id);
             res.cookie("login", result.rows[0].login);
             const user = {
               login: result.rows[0].login,
               accessToken: accessToken,
             };
-            res.status(200);
+            res.status(200).send({accessToken: accessToken});
           }
         );
       } else {
@@ -97,15 +91,9 @@ app.post("/auth/signin", async (req, res) => {
           httpOnly: true,
           sameSite: "strict",
         });
-        res.cookie("accessToken", accessToken, {
-          maxAge: minute * 10,
-          expires: new Date(Date.now() + minute * 10),
-          httpOnly: true,
-          sameSite: "strict",
-        });
         res.cookie("id", result.rows[0].id);
         res.cookie("login", result.rows[0].login);
-        res.status(200).send({ status: "OK" });
+        res.status(200).send({ status: "OK", accessToken: accessToken });
         return;
       }
     }
