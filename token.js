@@ -14,20 +14,17 @@ function generateRefreshToken(id, login) {
   });
 }
 
-async function authenticateAccessToken(req) {
+function authenticateAccessToken(req) {
   const authHeader = req.headers["authorization"];
   const token = authHeader && authHeader.split(" ")[1];
 
   if (token == null) return false;
 
-  jwt.verify(token, process.env.ACCESS_TOKEN, (err, tokenID) => {
-    console.log(err);
+  const tokenID = jwt.verify(token, process.env.ACCESS_TOKEN);
 
-    if (err) return false;
+  if (!tokenID) return false;
 
-    return tokenID;
-
-  });
+  return tokenID;
 }
 
 async function verifyRefreshToken(req, res, next) {
