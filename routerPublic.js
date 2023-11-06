@@ -23,7 +23,6 @@ routerPublic.post("/auth/signup", async (req, res) => {
   const result = pg.query(
     `SELECT id FROM users WHERE login = '${credentials.login}' OR email = '${credentials.email}'`,
     (err, result) => {
-      console.log(result.rows.length == 0);
       if (result.rows.length == 0) {
         pg.query(
           `INSERT INTO users (login, email, password) VALUES ('${credentials.login}', '${credentials.email}', '${pass}') RETURNING id, login;`,
