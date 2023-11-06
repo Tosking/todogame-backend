@@ -5,6 +5,10 @@ const inputHandler = require("./inputHandler.js");
 const { pg } = require("./dbConnect.js");
 const routerPublic = express.Router();
 
+const minute = 60000;
+const hour = minute * 60;
+const day = hour * 24;
+
 routerPublic.post("/auth/signup", async (req, res) => {
   const credentials = inputHandler.signupHandler(req);
   //console.log(credentials);

@@ -12,6 +12,7 @@ routerPrivate.use((req, res, next) => {
     return
   }
   if (!accessToken) {
+    console.log(accessToken)
     res.status(401).send("No token has been provided");
   } else {
     req.body.tokenID = accessToken;

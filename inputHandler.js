@@ -47,4 +47,5 @@ function taskInputHandler(req) {
 module.exports = {
   signupHandler,
   signinHandler,
+  taskInputHandler
 };
