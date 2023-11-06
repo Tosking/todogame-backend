@@ -12,6 +12,9 @@ const app = express();
 const port = 3001;
 require("dotenv").config();
 
+const routerPrivate = express.Router();
+const routerPublic = express.Router();
+
 const minute = 60000;
 const hour = minute * 60;
 const day = hour * 24;
@@ -27,7 +30,18 @@ app.use(
   })
 );
 
-app.post("/auth/signup", async (req, res) => {
+routerPrivate.use((req, res, next) => {
+  accessToken = token.authenticateAccessToken(req)
+  if(!accessToken){
+    res.sendStatus(401)
+  }
+  else {
+    req.body.token = accessToken
+    next()
+  }
+})
+
+routerPublic.post("/auth/signup", async (req, res) => {
   const credentials = inputHandler.signupHandler(req);
   //console.log(credentials);
   if (!credentials) {
@@ -75,7 +89,7 @@ app.post("/auth/signup", async (req, res) => {
   );
 });
 
-app.post("/auth/signin", async (req, res) => {
+routerPublic.post("/auth/signin", async (req, res) => {
   const credentials = inputHandler.signinHandler(req);
   const pass = crypto
     .createHash("sha256")
@@ -112,12 +126,12 @@ app.post("/auth/signin", async (req, res) => {
   );
 });
 
-app.post("/refresh", token.verifyRefreshToken, (req, res) => {
+routerPrivate.post("/refresh", (req, res) => {
   const accessToken = token.generateAccessToken(req.body.id, req.body.login);
   console.log("access: ", accessToken);
   res.status(200).send({ status: "OK", accessToken: accessToken });
 });
-app.post("/logout", (req, res) => {
+routerPrivate.post("/logout", (req, res) => {
   res.clearCookie("refreshToken");
   res.clearCookie("id");
   res.clearCookie("login");
@@ -127,6 +141,9 @@ app.post("/logout", (req, res) => {
 // app.post("/task/create", token.authenticateToken, (req, res) => {
 
 // })
+
+app.use(routerPrivate)
+app.use(routerPublic)
 
 app.listen(port, () => {
   console.log(`server started at port ${port}`);

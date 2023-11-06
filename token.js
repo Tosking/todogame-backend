@@ -14,20 +14,19 @@ function generateRefreshToken(id, login) {
   });
 }
 
-async function authenticateAccessToken(req, res, next) {
+async function authenticateAccessToken(req) {
   const authHeader = req.headers["authorization"];
   const token = authHeader && authHeader.split(" ")[1];
 
-  if (token == null) return res.sendStatus(401);
+  if (token == null) return false;
 
   jwt.verify(token, process.env.ACCESS_TOKEN, (err, tokenID) => {
     console.log(err);
 
-    if (err) return res.sendStatus(403);
+    if (err) return false;
 
-    req.body.accessToken = tokenID;
+    return tokenID;
 
-    next();
   });
 }
 
