@@ -32,7 +32,7 @@ Response:
 ---
 
 #### Private methods
-*** ALL private methods requiers access token ***
+***ALL private methods requiers access token***
 
 
 **POST /refresh**
