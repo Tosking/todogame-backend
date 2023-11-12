@@ -7,6 +7,7 @@
 #### Public methods
 
 **POST /auth/signup**
+
 Method for user signup
 
 Input: 
@@ -18,6 +19,7 @@ Response:
 1. access token
 
 **POST /auth/signin**
+
 Method for user signin
 
 Input: 
@@ -34,6 +36,7 @@ Response:
 
 
 **POST /refresh**
+
 Refreshing access token
 
 Input:
