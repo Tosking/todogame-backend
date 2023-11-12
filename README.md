@@ -6,7 +6,7 @@
 
 #### Public methods
 
-**POST /auth/signup**
+**`POST /auth/signup`**
 
 Method for user signup
 
@@ -18,7 +18,7 @@ Input:
 Response:
 1. access token
 
-**POST /auth/signin**
+**`POST /auth/signin`**
 
 Method for user signin
 
@@ -35,7 +35,7 @@ Response:
 ***ALL private methods requiers access token***
 
 
-**POST /refresh**
+**`POST /refresh`**
 
 Refreshing access token
 
@@ -45,16 +45,16 @@ Input:
 Response:
 1. access token
 
-**POST /logout**
+**`POST /logout`**
 Clears cookies
 
-**GET /get/list**
+**`GET /get/list`**
 
 Response:
 1. All tasks
 2. All categories
 
-**GET /get/task**
+**`GET /get/task`**
 
 Input:
 1. id
@@ -62,7 +62,7 @@ Input:
 Response:
 1. task
 
-**GET /get/category**
+**`GET /get/category`**
 
 Input:
 1. id
@@ -70,7 +70,7 @@ Input:
 Response:
 1. category
 
-**POST /task *or* category/create**
+**`POST /task *or* category/create`**
 
 Input:
 1. title
@@ -79,12 +79,12 @@ Input:
 Output:
 1. task
 
-**POST /task *or* category/delete**
+**`POST /task *or* category/delete`**
 
 Input:
 1. id
 
-**POST /task *or* category/change**
+**`POST /task *or* category/change`**
 
 Input:
 1. title
