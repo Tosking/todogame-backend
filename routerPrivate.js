@@ -34,6 +34,40 @@ routerPrivate.post("/logout", (req, res) => {
   res.status(200).send({ status: "OK" });
 });
 
+routerPrivate.get("/get/list", async (req, res) => {
+  const resObj = {}
+  resObj.tasks = (await pg.query(`SELECT id, title, description, category, deadline, completed FROM task WHERE userid=${req.body.tokenID.id}`)).rows
+  resObj.categories = (await pg.query(`SELECT id, title, description FROM category WHERE userid=${req.body.tokenID.id}`)).rows
+  if(!resObj){
+    res.status(400).send("Empty list")
+  }
+  else{
+    res.status(200).send(resObj)
+  }
+})
+
+routerPrivate.get("/get/task", async (req, res) => {
+  pg.query(`SELECT title, description, category, deadline, completed FROM task WHERE userid=${req.body.tokenID.id} AND id=${req.body.id}`, (err, result) => {
+    if(!result.rows[0]){
+      res.status(400).send("No task with given id")
+    }
+    else{
+      res.status(200).send(result.rows[0])
+    }
+  })
+})
+
+routerPrivate.get("/get/category", async (req, res) => {
+  pg.query(`SELECT title, description FROM category WHERE userid=${req.body.tokenID.id} AND id=${req.body.id}`, (err, result) => {
+    if(!result.rows[0]){
+      res.status(400).send("No category with given id")
+    }
+    else{
+      res.status(200).send(result.rows[0])
+    }
+  })
+})
+
 routerPrivate.post("/task/create", async (req, res) => {
   const task = inputHandler.taskInputHandler(req);
   pg.query(
