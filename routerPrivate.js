@@ -81,7 +81,7 @@ routerPrivate.get("/get/category", async (req, res) => {
 routerPrivate.post("/task/create", async (req, res) => {
   const task = inputHandler.taskInputHandler(req);
   pg.query(
-    `INSERT INTO task (userid, title, description) VALUES ('${req.body.tokenID.id}', '${task.title}', '${task.description}') RETURNING id`,
+    `INSERT INTO task (userid, title, description ${task.category?',category':''}) VALUES ('${req.body.tokenID.id}', '${task.title}', '${task.description}' ${task.category?`,${task.category}`:''} ) RETURNING id`,
     (err, result) => {
       if (err) {
         console.log(err);
@@ -108,7 +108,7 @@ routerPrivate.post("/task/delete", (req, res) => {
 });
 
 routerPrivate.post("/category/create", (req, res) => {
-  const task = inputHandler.taskInputHandler(req);
+  const category = inputHandler.taskInputHandler(req);
   pg.query(
     `INSERT INTO category (userid, title, description) VALUES ('${req.body.tokenID.id}', '${category.title}', '${category.description}') RETURNING id`,
     (err, result) => {
@@ -116,8 +116,8 @@ routerPrivate.post("/category/create", (req, res) => {
         console.log(err);
         res.status(500).send("Error when inserting category into database");
       } else {
-        task.id = result.rows[0].id;
-        res.status(200).json(task);
+        category.id = result.rows[0].id;
+        res.status(200).json(category);
       }
     }
   );
