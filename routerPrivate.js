@@ -5,8 +5,10 @@ const { pg } = require("./dbConnect.js");
 const routerPrivate = express.Router();
 
 routerPrivate.use(async (req, res, next) => {
+  console.log("work");
   try {
     accessToken = token.authenticateAccessToken(req);
+    
   } catch (TokenExpiredError) {
     res.status(401).send("Token has expired");
     return;
@@ -15,6 +17,7 @@ routerPrivate.use(async (req, res, next) => {
     res.status(401).send("No token has been provided");
   } else {
     req.body.tokenID = accessToken;
+    
     next();
   }
 });
@@ -80,6 +83,7 @@ routerPrivate.get("/get/category", async (req, res) => {
 
 routerPrivate.post("/task/create", async (req, res) => {
   const task = inputHandler.taskInputHandler(req);
+  console.log(req.body.tokenID.id);
   pg.query(
     `INSERT INTO task (userid, title, description ${task.category?',category':''}) VALUES ('${req.body.tokenID.id}', '${task.title}', '${task.description}' ${task.category?`,${task.category}`:''} ) RETURNING id`,
     (err, result) => {
@@ -95,10 +99,12 @@ routerPrivate.post("/task/create", async (req, res) => {
 });
 
 routerPrivate.post("/task/delete", (req, res) => {
+ 
   pg.query(
     `DELETE FROM task WHERE id=${req.body.id} AND userid=${req.body.tokenID.id} RETURNING id`,
     (err, result) => {
       if (!result.rows[0]) {
+        console.log(req.body);
         res.status(400).send("Non-existent task");
       } else {
         res.status(200).send(result.rows[0].id);
@@ -138,10 +144,12 @@ routerPrivate.post("/category/delete", (req, res) => {
 
 routerPrivate.post("/task/change", async (req, res) => {
   const task = inputHandler.taskInputHandler(req);
+  console.log(task);
+
   pg.query(
-    `UPDATE task SET title='${task.title}', description='${task.description}' WHERE userid=${req.body.tokenID.id} AND id=${req.body.id}`,
+    `UPDATE task SET title='${task.title}', description='${task.description}' WHERE userid=${req.body.tokenID.id} AND id=${task.id}`,
     (err, result) => {
-      if (!err) {
+      if (err) {
         res.sendStatus(500);
         return;
       }

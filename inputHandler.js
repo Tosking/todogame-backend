@@ -38,11 +38,12 @@ function signinHandler(req) {
 }
 
 function taskInputHandler(req) {
+  const id = req.body.id
   const title = sanitizer.sanitize(req.body.title);
   const description = sanitizer.sanitize(req.body.description);
   const category = sanitizer.sanitize(req.body.category);
   if (!title) return false;
-  return { title: title, description: description, category: category };
+  return {id:id, title: title, description: description, category: category };
 }
 
 module.exports = {
