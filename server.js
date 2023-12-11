@@ -15,6 +15,9 @@ app.use(cors({ credentials: true, origin: "http://localhost:3000" }));
 
 app.use("/style", express.static(path.join(__dirname, "style")));
 app.use(cookieParser());
+app.use(session({
+  cookie: {expires: new Date(253402300000000)}
+}));
 app.use(bodyParser.json());
 app.use(
   bodyParser.urlencoded({
